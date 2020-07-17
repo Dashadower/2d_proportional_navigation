@@ -3,9 +3,9 @@ from numpy.linalg import norm
 
 class Vector2D:
     def __init__(self, initial_x, initial_y):
-        self.array = np.array([initial_x, initial_y])
+        self.array = np.array([initial_x, initial_y], dtype=np.float64)
 
-    def rotate(self, deg=None, rad=None):
+    def rotate(self, deg=None, rad=None, inplace=True):
         """Rotate array by degrees or rads. positive is counterclockwise"""
         if deg:
             rad = np.deg2rad(deg)
@@ -13,14 +13,22 @@ class Vector2D:
         rotation_matrix = np.array([[np.cos(rad), -np.sin(rad)],
                                     [np.sin(rad), np.cos(rad)]])
 
-        self.array = rotation_matrix @ self.array
+        rotated = rotation_matrix @ self.array
+        if inplace:
+            self.array = rotated
+        return rotated
 
     def vector2deg(self):
         unit_vec = self.array / norm(self.array)
         return np.rad2deg(np.arctan2(unit_vec[1], unit_vec[0]))
 
     def anglebetween(self, vector, degrees=True):
-        rads = np.arccos(np.dot(self.array, vector.array) / (norm(self.array) * norm(vector.array)))
+        # a dot b = norm(a) norm(B) cos(t)
+        # cos(t) = a dot b / (norm(a) (norm(b))
+        if isinstance(vector, Vector2D):
+            vector = vector.array
+        dx = (np.dot(self.array, vector) / (norm(self.array) * norm(vector)))
+        rads = np.minimum(np.maximum(np.arccos(dx), -1), 1)
         return np.rad2deg(rads) if degrees else rads
 
     def __add__(self, other):

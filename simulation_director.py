@@ -1,4 +1,4 @@
-from objects import MovingObject
+from objects import MovingObject, PursuitObject
 import numpy as np
 
 
@@ -12,9 +12,14 @@ import numpy as np
 # 6. Goto 1, actuating adjustments made in steps 3 and 4
 
 class SimulationDirector:
-    def __init__(self, objects: list):
-        self.objects = objects
+    def __init__(self, prey_object, pursuit_object: PursuitObject):
+        self.prey_object = prey_object
+        self.pursuit_object = pursuit_object
 
     def tick(self):
-        for mobject in self.objects:
-            mobject.tick()
+        self.prey_object.tick()
+
+        get_user_input()
+
+        self.pursuit_object.calculate_solution()
+        self.pursuit_object.update_target_data()

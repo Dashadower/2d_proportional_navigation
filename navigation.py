@@ -12,6 +12,8 @@ def pure_pursuit(pursuit_obj: PursuitObject, target_obj: MovingObject):
 
     los_vector = (target_obj.location_arr - pursuit_obj.location_arr)
     los_angle = pursuit_obj.speed_vector.anglebetween(los_vector)  # los angle
+    if np.dot(pursuit_obj.speed_vector.rotate(deg=-90, inplace=False), los_vector) > 0:
+        los_angle = -los_angle
     return los_angle
 
 def simple_proportional_navigation(pursuit_obj: PursuitObject, target_obj: MovingObject, N=3):
