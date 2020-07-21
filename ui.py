@@ -16,6 +16,7 @@ class SimulationCanvas(tk.Canvas):
         self.prey_obj_width = 10
         self.prey_obj_length = 20
         self.speed_vector_draw_scale = 20
+        self.focus_set()
 
     def cartesian2screen(self, x: Union[int, np.ndarray], y: Union[int, None] = None):
         #x, y -> origin[0] + x, origin[1] - y
@@ -66,7 +67,7 @@ class SimulationCanvas(tk.Canvas):
                 self.create_cartesian_line(obj_x, obj_y,
                                            obj_x + obj.speed_vector.array[0] * self.speed_vector_draw_scale,
                                            obj_y + obj.speed_vector.array[1] * self.speed_vector_draw_scale,
-                                 arrow=tk.LAST, fill="red")
+                                            arrow=tk.LAST, fill="red")
             if draw_los:
                 for pursuit_obj in pursuit_objects:
                     self.create_cartesian_line(obj_x, obj_y, pursuit_obj.location_arr[0], pursuit_obj.location_arr[1])
@@ -85,27 +86,56 @@ class SimulationCanvas(tk.Canvas):
                 self.create_cartesian_line(obj_x, obj_y,
                                            obj_x + obj.speed_vector.array[0] * self.speed_vector_draw_scale,
                                            obj_y + obj.speed_vector.array[1] * self.speed_vector_draw_scale,
-                                 arrow=tk.LAST, fill="red")
+                                            arrow=tk.LAST, fill="red")
 
+default_ticks = 200
+current_ticks = 50
+import random
+gs = random.uniform(0, 1)
+gs *= random.choice([1, -1])
 def test(cv, prey, pursiot):
-    from navigation import pure_pursuit
-    for ob in prey:
-        ob.rotate(deg=1)
-        ob.tick()
+    from navigation import pure_pursuit, simple_proportional_navigation, true_proportional_navigation, augumented_proportional_navigation
+
+    for obj in prey + pursiot:
+        obj.tick()
+
     for ob in pursiot:
-        print(ob.speed_vector, pure_pursuit(ob, prey[0]))
-        ob.rotate(deg=pure_pursuit(ob, prey[0]))
-        ob.tick()
+        #print(ob.speed_vector, pure_pursuit(ob, prey[0]))
+        solution = augumented_proportional_navigation(ob, prey[0])
+        #print(solution)
+        ob.rotate(deg=solution)
+        ob.update_target_data(prey[0])
+    for ob in prey:
+        '''global current_ticks, gs
+        if current_ticks > 0:
+            ob.rotate(deg=gs)
+            current_ticks -= 1
+        else:
+            current_ticks = 50
+            gs = random.uniform(0, 1)
+            gs *= random.choice([1, -1])'''
+        #ob.rotate(deg=-2)
+        pass
+
+
     cv.render(prey, pursiot)
-    cv.after(50, lambda : test(cv, prey, pursiot))
+    cv.after(50, lambda: test(cv, prey, pursiot))
+
+def on_a(tt):
+    print("on_a")
+    tt.rotate(deg=-2)
 
 if __name__ == '__main__':
     root = tk.Tk()
+    root.attributes('-fullscreen', True)
     g = SimulationCanvas(root)
     g.pack(expand=tk.YES, fill=tk.BOTH)
     #g.create_rectangle((100.545, 90, 150, 180))
-    p = MovingObject("p1", 300, 300, 1.0, 1.0, 1, turn_rate_deg=0.5)
-    p2 = PursuitObject("pursuit", 500, 100, -2, -2, 1, turn_rate_deg=1)
+    p = MovingObject("p1", 500, 500, 4.0, 4.0, 1, turn_rate_deg=3)
+    p2 = PursuitObject("pursuit", 100, 400, 17.5, 0.0, 1, turn_rate_deg=3)
+    g.bind("a", lambda e: p.rotate(deg=40))
+    g.bind("d", lambda e: p.rotate(deg=-40))
+    p2.update_target_data(p)
     root.after(100, lambda: g.render([p], [p2]))
     root.after(1000, lambda: test(g, [p], [p2]))
     root.mainloop()

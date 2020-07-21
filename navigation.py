@@ -55,11 +55,12 @@ def augumented_proportional_navigation(pursuit_obj: PursuitObject, target_obj: M
     n_T: Target Acceleration rate normal to LOS
     """
     dt = 1  # los difference time (1 tick)
-    old_los = pursuit_obj._anglebetweenarr(pursuit_obj.previous_pursuit_location_arr, pursuit_obj.previous_target_location_arr,degrees=False)
-    old_normal_velocity = np.dot(pursuit_obj.previous_target_velocity_arr, old_los / norm(old_los))
-    new_los = pursuit_obj._anglebetweenarr(pursuit_obj.location_arr, target_obj.location_arr, degrees=False)
-    new_normal_velocity = np.dot(target_obj.speed_vector, new_los / norm(new_los))
+    old_los_vector = pursuit_obj.previous_target_location_arr - pursuit_obj.previous_pursuit_location_arr
+    old_normal_velocity = np.dot(pursuit_obj.previous_target_velocity_arr, old_los_vector) / norm(old_los_vector)
+    new_los_vector = target_obj.location_arr - pursuit_obj.location_arr
+    new_normal_velocity = np.dot(target_obj.speed_vector.array, new_los_vector) / norm(new_los_vector)
     normal_acceleration_rate = (new_normal_velocity - old_normal_velocity) / dt
+    print(normal_acceleration_rate)
     a_cmd_rad = N * pursuit_obj.calculate_closing_speed(target_obj) * pursuit_obj.calculate_los_rate(target_obj) + (N * normal_acceleration_rate) / 2
 
     return np.rad2deg(a_cmd_rad)

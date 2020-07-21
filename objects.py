@@ -52,9 +52,13 @@ class PursuitObject(MovingObject):
         new_target_location_arr = target_object.location_arr
         new_target_velocity_arr = target_object.speed_vector.array
         dt = 1  # los difference time (1 tick)
-        old_los = self._anglebetweenarr(self.previous_pursuit_location_arr, self.previous_target_location_arr, degrees=False)
-        new_los = self._anglebetweenarr(self.speed_vector.array, new_target_location_arr, degrees=False)
-        return (new_los - old_los) / dt
+        old_los_vector = self.previous_target_location_arr - self.previous_pursuit_location_arr
+        new_los_vector = target_object.location_arr - self.location_arr
+        diff_rad = self._anglebetweenarr(old_los_vector, new_los_vector, degrees=False)
+        if np.dot(np.array([-old_los_vector[1], old_los_vector[0]]), new_los_vector) < 0:
+            diff_rad = -diff_rad
+        #print("LOS rate:", np.rad2deg(diff_rad))
+        return diff_rad
 
     def calculate_closing_speed(self, target_object: MovingObject):
         """
@@ -66,7 +70,7 @@ class PursuitObject(MovingObject):
         return -(np.dot((self.speed_vector.array - target_object.speed_vector.array), pos_diff) / norm(pos_diff))
 
     def _anglebetweenarr(self, arr1: np.ndarray, arr2: np.ndarray, degrees=True):
-        rads = np.arccos(np.dot(arr1, arr2) / (norm(arr1) * norm(arr2)))
+        rads = np.arccos(np.clip(np.dot(arr1, arr2) / (norm(arr1) * norm(arr2)), -1, 1))
         return np.rad2deg(rads) if degrees else rads
 
     def update_target_data(self, target_object: MovingObject):

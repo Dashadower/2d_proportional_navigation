@@ -7,9 +7,10 @@ class Vector2D:
 
     def rotate(self, deg=None, rad=None, inplace=True):
         """Rotate array by degrees or rads. positive is counterclockwise"""
-        if deg:
+        if deg is not None:
             rad = np.deg2rad(deg)
-
+        if rad == 0.0:
+            return self.array
         rotation_matrix = np.array([[np.cos(rad), -np.sin(rad)],
                                     [np.sin(rad), np.cos(rad)]])
 
@@ -28,7 +29,8 @@ class Vector2D:
         if isinstance(vector, Vector2D):
             vector = vector.array
         dx = (np.dot(self.array, vector) / (norm(self.array) * norm(vector)))
-        rads = np.minimum(np.maximum(np.arccos(dx), -1), 1)
+        #rads = np.minimum(np.maximum(np.arccos(dx), -1), 1)
+        rads = np.arccos(dx)
         return np.rad2deg(rads) if degrees else rads
 
     def __add__(self, other):
